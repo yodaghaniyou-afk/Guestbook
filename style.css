@@ -87,3 +87,19 @@ h2 {
     margin-top: 8px;
     color: #555;
 }
+.search-form {
+    flex-direction: row;
+    margin-bottom: 20px;
+}
+
+.search-form input {
+    flex: 1;
+}
+
+.search-form button {
+    background-color: #6c757d;
+}
+
+.search-form button:hover {
+    background-color: #5a6268;
+}

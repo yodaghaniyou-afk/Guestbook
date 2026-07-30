@@ -12,14 +12,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             "nom" => $nom,
             "message" => $message
         ]);
-        // Redirection pour éviter le renvoi du formulaire en rafraîchissant (pattern PRG)
         header("Location: index.php");
         exit;
     }
 }
 
-// Récupération de tous les messages, du plus récent au plus ancien
-$stmt = $pdo->query("SELECT * FROM messages ORDER BY date_creation DESC");
+// Recherche via $_GET (ex: index.php?recherche=Yoda)
+$recherche = trim($_GET["recherche"] ?? "");
+
+if ($recherche !== "") {
+    $stmt = $pdo->prepare("SELECT * FROM messages WHERE nom LIKE :recherche ORDER BY date_creation DESC");
+    $stmt->execute(["recherche" => "%$recherche%"]);
+} else {
+    $stmt = $pdo->query("SELECT * FROM messages ORDER BY date_creation DESC");
+}
+
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
@@ -37,6 +44,11 @@ $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <input type="text" name="nom" placeholder="Votre nom" required>
             <textarea name="message" placeholder="Votre message" required></textarea>
             <button type="submit">Envoyer</button>
+        </form>
+
+        <form method="GET" action="index.php" class="search-form">
+            <input type="text" name="recherche" placeholder="Rechercher par nom..." value="<?= htmlspecialchars($recherche) ?>">
+            <button type="submit">Rechercher</button>
         </form>
 
         <h2>Messages (<?= count($messages) ?>)</h2>
