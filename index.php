@@ -1,17 +1,47 @@
 <?php
 require_once "config.php";
 
+class MessageManager
+{
+    private PDO $pdo;
+
+    public function __construct(PDO $pdo)
+    {
+        $this->pdo = $pdo;
+    }
+
+    public function ajouter(string $nom, string $message): bool
+    {
+        $stmt = $this->pdo->prepare("INSERT INTO messages (nom, message) VALUES (:nom, :message)");
+        return $stmt->execute([
+            "nom" => $nom,
+            "message" => $message
+        ]);
+    }
+
+    public function recupererTous(): array
+    {
+        $stmt = $this->pdo->query("SELECT * FROM messages ORDER BY date_creation DESC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function rechercherParNom(string $nom): array
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM messages WHERE nom LIKE :recherche ORDER BY date_creation DESC");
+        $stmt->execute(["recherche" => "%$nom%"]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+
+$manager = new MessageManager($pdo);
+
 // Traitement du formulaire (si soumis)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $nom = trim($_POST["nom"] ?? "");
     $message = trim($_POST["message"] ?? "");
 
     if ($nom !== "" && $message !== "") {
-        $stmt = $pdo->prepare("INSERT INTO messages (nom, message) VALUES (:nom, :message)");
-        $stmt->execute([
-            "nom" => $nom,
-            "message" => $message
-        ]);
+        $manager->ajouter($nom, $message);
         header("Location: index.php");
         exit;
     }
@@ -21,13 +51,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 $recherche = trim($_GET["recherche"] ?? "");
 
 if ($recherche !== "") {
-    $stmt = $pdo->prepare("SELECT * FROM messages WHERE nom LIKE :recherche ORDER BY date_creation DESC");
-    $stmt->execute(["recherche" => "%$recherche%"]);
+    $messages = $manager->rechercherParNom($recherche);
 } else {
-    $stmt = $pdo->query("SELECT * FROM messages ORDER BY date_creation DESC");
+    $messages = $manager->recupererTous();
 }
-
-$messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
