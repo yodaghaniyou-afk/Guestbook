@@ -1,0 +1,9 @@
+# Fichier de configuration sensible (identifiants base de données)
+config.php
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers d'éditeurs
+.vscode/
